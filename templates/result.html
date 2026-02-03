@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2>{{ meeting.title }}</h2>
+                        <span class="badge bg-primary">{{ meeting.meeting_type }}</span>
+                        <span class="text-muted ms-2">{{ meeting.created_at }}</span>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary me-2" onclick="downloadSummary('txt')">
+                            <i class="bi bi-download"></i> TXT
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="downloadSummary('pdf')">
+                            <i class="bi bi-download"></i> PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if meeting.ai_output %}
+        {% set data = meeting.ai_output %}
+        
+        <!-- Summary Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-card-text"></i> Summary</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ data.summary }}</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Key Points -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-list-check"></i> Key Points</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            {% for point in data.key_points %}
+                            <li class="list-group-item">{{ loop.index }}. {{ point }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decisions -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Decisions Made</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            {% for decision in data.decisions %}
+                            <li class="list-group-item">{{ loop.index }}. {{ decision }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Items -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Action Items</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Task</th>
+                                <th>Owner</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for action in data.action_items %}
+                            <tr>
+                                <td>{{ action.task }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ action.owner or 'Unassigned' }}</span>
+                                </td>
+                                <td>{{ action.due_date or 'Not specified' }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">Pending</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agenda Breakdown -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-journal-text"></i> Agenda/Topic-wise Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="agendaAccordion">
+                    {% for topic in data.agenda %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" 
+                                    data-bs-toggle="collapse" 
+                                    data-bs-target="#topic{{ loop.index }}">
+                                {{ topic.topic }}
+                            </button>
+                        </h2>
+                        <div id="topic{{ loop.index }}" class="accordion-collapse collapse" 
+                             data-bs-parent="#agendaAccordion">
+                            <div class="accordion-body">
+                                {{ topic.summary }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Raw Transcript -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-chat-text"></i> Transcript</h5>
+            </div>
+            <div class="card-body">
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <pre style="white-space: pre-wrap;">{{ meeting.transcript or 'No transcript available' }}</pre>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function downloadSummary(format) {
+    window.location.href = `/api/download/{{ meeting.id }}/${format}`;
+}
+</script>
+{% endblock %}
