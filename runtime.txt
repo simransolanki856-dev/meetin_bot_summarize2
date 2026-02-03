@@ -1,1 +1,8 @@
-python-3.11.9
+services:
+  - type: web
+    name: meeting-bot
+    env: python
+    plan: free
+    pythonVersion: 3.11.9
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
